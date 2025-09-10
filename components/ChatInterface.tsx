@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import ChatSidebar from './ChatSidebar';
 import ChatArea from './ChatArea';
 import DataSidebar from './DataSidebar';
@@ -20,8 +21,10 @@ interface Message {
 }
 
 export default function ChatInterface() {
+  const { token, sessionId, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return;
@@ -31,13 +34,21 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           message: message,
+          session_id: currentSessionId,
           conversation_history: messages
         }),
       });

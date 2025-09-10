@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -211,9 +214,20 @@ export default function ChatArea({ messages, onSendMessage, isLoading }: ChatAre
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                     </div>
                   )}
-                  <p className={`whitespace-pre-wrap ${message.role === 'user' ? 'text-white' : 'text-gray-700'}`}>
-                    {message.content}
-                  </p>
+                  {message.role === 'assistant' ? (
+                    <div className="prose prose-sm max-w-none text-gray-700">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className={`whitespace-pre-wrap ${message.role === 'user' ? 'text-white' : 'text-gray-700'}`}>
+                      {message.content}
+                    </p>
+                  )}
                   
                   {/* Show related FAQs and suggested questions for assistant messages */}
                   {message.role === 'assistant' && message.relatedFaqs && message.relatedFaqs.length > 0 && (
